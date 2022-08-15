@@ -42,14 +42,24 @@
     notify: reload sysctl
 
 -   name: Setting GRUB
-    lineinfile: path=/etc/default/grub regexp='^GRUB_RECORDFAIL_TIMEOUT=.*' line='GRUB_RECORDFAIL_TIMEOUT=1'
+    lineinfile:
+        path: /etc/default/grub
+        regexp: '^GRUB_RECORDFAIL_TIMEOUT=.*'
+        line: 'GRUB_RECORDFAIL_TIMEOUT=1'
     notify: update grub
 
 -   name: Setting Sudo
-    template: src=sudo/sudoers.j2 dest=/etc/sudoers owner=root group=root mode=0440
+    template:
+        src: sudo/sudoers.j2
+        dest: /etc/sudoers
+        owner: root
+        group: root
+        mode: 0440
 
 -   name: Setting SSHD
-    template: src=ssh/sshd_config.j2 dest=/etc/ssh/sshd_config
+    template:
+        src: ssh/sshd_config.j2
+        dest: /etc/ssh/sshd_config
     notify: restart sshd
 
 -   name: Setting Rsyslog

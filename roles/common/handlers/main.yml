@@ -13,7 +13,7 @@
 
 -   name: restart postfix 1
     service:
-        name: ssh
+        name: postfix
         state: restarted
     listen: restart postfix
 

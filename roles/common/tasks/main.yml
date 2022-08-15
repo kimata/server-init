@@ -34,11 +34,11 @@
 
 -   name: Setting Sysctl
     template:
-      src: sysctl/sysctl.conf.j2
-      dest: /etc/sysctl.conf
-      owner: root
-      group: root
-      mode: 0440
+        src: sysctl/sysctl.conf.j2
+        dest: /etc/sysctl.conf
+        owner: root
+        group: root
+        mode: 0440
     notify: reload sysctl
 
 -   name: Setting GRUB
@@ -49,14 +49,13 @@
     template: src=sudo/sudoers.j2 dest=/etc/sudoers owner=root group=root mode=0440
 
 -   name: Setting SSHD
-    template:
-      src=ssh/sshd_config.j2 dest=/etc/ssh/sshd_config
+    template: src=ssh/sshd_config.j2 dest=/etc/ssh/sshd_config
     notify: restart sshd
 
 -   name: Setting Rsyslog
     template:
-      src: rsyslog/{{ item.name }}.j2
-      dest: '{{ item.path }}/{{ item.name }}'
+        src: rsyslog/{{ item.name }}.j2
+        dest: '{{ item.path }}/{{ item.name }}'
     with_items:
     -   {path: /etc, name: rsyslog.conf}
     notify: restart rsyslog
@@ -71,16 +70,16 @@
 
 -   name: Setting Postfix
     lineinfile:
-      dest: '{{item.dest}}'
-      regexp: '{{item.regexp}}'
-      line: '{{item.line}}'
+        dest: '{{item.dest}}'
+        regexp: '{{item.regexp}}'
+        line: '{{item.line}}'
     with_items:
     -   {dest: /etc/postfix/main.cf, regexp: '^relayhost =.*', line: 'relayhost = [{{network.mail}}.{{network.domain}}]'}
     -   {dest: /etc/aliases, regexp: '^root:.*', line: 'root: root@{{network.mail}}.{{network.domain}}'}
     -   {dest: /etc/aliases, regexp: '^{{ansible_env.SUDO_USER}}:.*', line: '{{ansible_env.SUDO_USER}}: root'}
     notify: restart postfix
 
-    
+
 -   name: Disable sleep
     systemd:
         name: '{{item}}'

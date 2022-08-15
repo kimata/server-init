@@ -1,37 +1,34 @@
-- name: reload sysctl
-  shell: sysctl -p
+-   name: reload sysctl
+    shell: sysctl -p
 
-- name: restart sshd
-  service:
-    name: ssh
-    state: restarted
+-   name: restart sshd
+    service:
+        name: ssh
+        state: restarted
 
-- name: restart rsyslog
-  service:
-    name: rsyslog
-    state: restarted
-
-# - name: restart ntp
-#   service: name=ntp state=restarted
+-   name: restart rsyslog
+    service:
+        name: rsyslog
+        state: restarted
 
 -   name: restart postfix 1
     service:
-      name: ssh
-      state: restarted
+        name: ssh
+        state: restarted
     listen: restart postfix
 
 -   name: restart postfix 2
     shell: newaliases
     listen: restart postfix
 
-- name: restart timesyncd
-  service:
-    name: systemd-timesyncd
-    state: restarted
+-   name: restart timesyncd
+    service:
+        name: systemd-timesyncd
+        state: restarted
 
-- name: update grub
-  shell: update-grub
-  
+-   name: update grub
+    shell: update-grub
+
 # Local Variables:
 # mode: yaml
 # tab-width: 4

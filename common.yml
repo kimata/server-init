@@ -1,0 +1,15 @@
+- hosts: all
+  vars_files: 
+    - network.yml
+
+  become: yes
+
+  roles:
+    - common
+
+  handlers:
+
+  tasks:
+
+
+

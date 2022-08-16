@@ -1,6 +1,6 @@
 -   hosts: all
     vars_files:
-    -   network.yml
+    -   vars/network.yml
 
     become: yes
 

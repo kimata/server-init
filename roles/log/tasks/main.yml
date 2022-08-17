@@ -13,7 +13,7 @@
     file:
         path: /home/{{ansible_env.SUDO_USER}}/service/{{item}}
         state: directory
-        mode: 0777
+        mode: '0777'
         recurse: yes
     with_items:
     -   loki/conf

@@ -1,0 +1,11 @@
+network:
+    subnet: 192.168.0.0
+    netmask: 21
+    domain: green-rabbit.net
+    mail: mail-loocal
+    ntp: ntp.nict.jp
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:

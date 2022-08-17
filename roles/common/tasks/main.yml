@@ -41,12 +41,18 @@
         mode: 0440
     notify: reload sysctl
 
+-   name: Checking /etc/default/grub existence
+    stat:
+        path: /etc/default/grub
+    register: default_grub
+
 -   name: Setting GRUB
     lineinfile:
         path: /etc/default/grub
         regexp: '^GRUB_RECORDFAIL_TIMEOUT=.*'
         line: 'GRUB_RECORDFAIL_TIMEOUT=1'
     notify: update grub
+    when: default_grub.stat.exists
 
 -   name: Setting Sudo
     template:

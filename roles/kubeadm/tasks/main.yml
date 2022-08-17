@@ -1,0 +1,200 @@
+-   name: Install Packages
+    package:
+        name:
+        -   apt-transport-https
+        -   ca-certificates
+        -   curl
+
+-   name: Install Docker public signing key
+    shell: curl -sSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+-   name: Add the Docker apt repository
+    lineinfile:
+        path: /etc/apt/sources.list.d/docker.list
+        line: deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable
+        create: yes
+
+-   name: Install Google Cloud public signing key
+    get_url:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        dest: /usr/share/keyrings/kubernetes-archive-keyring.gpg
+        mode: '0644'
+
+-   name: Add the Kubernetes apt repository
+    lineinfile:
+        path: /etc/apt/sources.list.d/kubernetes.list
+        line: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+        create: yes
+
+-   name: Install containerd Kubernetes Packages
+    apt:
+        pkg:
+        -   docker.io
+        -   containerd
+        -   kubelet
+        -   kubeadm
+        -   kubectl
+        update_cache: yes
+
+-   name: Hold Kubernetes Packages
+    dpkg_selections:
+        name: '{{item}}'
+        selection: hold
+    with_items:
+    -   kubelet
+    -   kubeadm
+    -   kubectl
+
+-   name: Setting kernel module
+    lineinfile:
+        path: /etc/modules-load.d/kubenetes.conf
+        line: "{{item}}"
+        create: yes
+    with_items:
+    -   overlay
+    -   br_netfilter
+
+-   name: Load kernel module
+    modprobe:
+        name: br_netfilter
+        state: present
+
+-   name: Setting Sysctl
+    lineinfile:
+        path: /etc/sysctl.conf
+        regexp: '^{{item.regexp}}.*'
+        line: '{{item.line}}=1'
+    with_items:
+    -   regexp: net.ipv4.ip_forward
+        line: net.ipv4.ip_forward=1
+    -   regexp: net.bridge.bridge-nf-call-ip6table
+        line: net.bridge.bridge-nf-call-ip6table=1
+    -   regexp: net.bridge.bridge-nf-call-iptables
+        line: net.bridge.bridge-nf-call-iptables=1
+    -   regexp: fs.inotify.max_user_instances
+        line: fs.inotify.max_user_instances=100000
+    -   regexp: fs.inotify.max_user_watches
+        line: fs.inotify.max_user_watches=100000
+    notify: reload sysctl
+
+-   name: Create containerd config directory
+    file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+-   name: Create containerd config file
+    shell: containerd config default > /etc/containerd/config.toml
+
+-   name: Setting crictl endpoint
+    shell: crictl config --set runtime-endpoint=unix:///run/containerd/containerd.sock --set image-endpoint=unix:///run/containerd/containerd.sock
+
+-   name: Enable systemd cgroup
+    lineinfile:
+        path: /etc/containerd/config.toml
+        regexp: '{{item.regexp}}'
+        line: '{{item.line}}'
+        insertafter: '{{item.insertafter}}'
+    with_items:
+    -   regexp: '            SystemdCgroup = false'
+        line: '            SystemdCgroup = true'
+        insertafter: 'plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options'
+    -   regexp: 'endpoint = \["http://registry.green-rabbit.net"\]'
+        line: '          endpoint = ["http://registry.green-rabbit.net"]'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"\]'
+        line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"]'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+    -   regexp: 'insecure_skip_verify = true'
+        line: '          insecure_skip_verify = true'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls\]'
+        line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls]'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+
+
+-   name: Join docker group
+    user:
+        name: '{{ ansible_env.SUDO_USER }}'
+        groups: docker
+        append: yes
+
+# # NOTE: Ubuntu 22.04でkubeadmでKubernetesクラスターが動かない？
+# # https://tech.virtualtech.jp/entry/2022/06/08/115030
+# -   name: Disable cgroup v2 and use cgroup v1
+#     lineinfile:
+#         path: /etc/default/grub
+#         regexp: '^GRUB_CMDLINE_LINUX_DEFAULT'
+#         line: 'GRUB_CMDLINE_LINUX_DEFAULT="systemd.unified_cgroup_hierarchy=false"'
+
+# -   name: Reflect kernel parameter
+#     shell: update-grub
+
+-   name: Edit eviction threshold
+    blockinfile:
+        path: /var/lib/kubelet/config.yaml
+        block: |
+            evictionHard:
+              imagefs.available: "2%"
+              nodefs.available: "1%"
+    # NOTE: このファイルが存在しない場合，まだ kubeadm init や join 前で，それらを実行すると
+    # 上書きされてしまうものの，ここでコケると不便なので，とりあえず作成する．
+        create: yes
+    when: "'raspi' in ansible_kernel"
+
+-   name: List old log files (1)
+    find:
+        paths: /var/log
+        patterns: "*.gz"
+    register: old_log_1
+    when: "'raspi' in ansible_kernel"
+
+-   name: List old log files (2)
+    find:
+        paths: /var/log
+        patterns: "*.0"
+    register: old_log_2
+    when: "'raspi' in ansible_kernel"
+
+-   name: Remove old log files
+    file:
+        path: "{{ item['path'] }}"
+        state: absent
+    with_items:
+    -   "{{ old_log_1['files'] }}"
+    -   "{{ old_log_2['files'] }}"
+    when: "'raspi' in ansible_kernel"
+
+-   name: Remove systemd log
+    shell:
+        cmd: journalctl --vacuum-size=0
+    when: "'raspi' in ansible_kernel"
+
+-   name: Protect NAND devices
+    lineinfile:
+        path: /etc/fstab
+        regexp: '{{item.regexp}}'
+        line: '{{item.line}}'
+    with_items:
+    -   regexp: 'LABEL=writable'
+        line: 'LABEL=writable  /   ext4    discard,errors=remount-ro,noatime,commit=3600   0 1'
+    -   regexp: '/tmp'
+        line: 'tmpfs        /tmp            tmpfs   nosuid,nodev         0       0'
+    -   regexp: '/var/log'
+        line: 'tmpfs        /var/log        tmpfs   nosuid,nodev         0       0'
+    when: "'raspi' in ansible_kernel"
+
+-   name: Disable swap
+    lineinfile:
+        path: /etc/fstab
+        regexp: '\sswap\s'
+        state: absent
+
+# -   name: Reboot
+#     reboot:
+#         reboot_timeout: 300
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:

@@ -119,17 +119,6 @@
         groups: docker
         append: yes
 
-# # NOTE: Ubuntu 22.04でkubeadmでKubernetesクラスターが動かない？
-# # https://tech.virtualtech.jp/entry/2022/06/08/115030
-# -   name: Disable cgroup v2 and use cgroup v1
-#     lineinfile:
-#         path: /etc/default/grub
-#         regexp: '^GRUB_CMDLINE_LINUX_DEFAULT'
-#         line: 'GRUB_CMDLINE_LINUX_DEFAULT="systemd.unified_cgroup_hierarchy=false"'
-
-# -   name: Reflect kernel parameter
-#     shell: update-grub
-
 -   name: Edit eviction threshold
     blockinfile:
         path: /var/lib/kubelet/config.yaml

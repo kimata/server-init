@@ -17,6 +17,7 @@ services:
     command: -config.file=/etc/loki/loki-config.yaml
     networks:
       - loki
+    restart: always
 
   grafana:
     image: grafana/grafana-oss:9.0.2-ubuntu
@@ -41,3 +42,4 @@ services:
       - 8081
     networks:
       - loki
+    restart: always

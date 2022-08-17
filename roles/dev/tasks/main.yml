@@ -1,0 +1,140 @@
+-   name: Install Packages
+    become: '{{ should_be_root }}'
+    package:
+        name:
+        -   "{{ 'emacs-nox' if ansible_pkg_mgr != 'homebrew' else 'emacs' }}"
+        -   zsh
+        -   tmux
+        -   keychain
+        -   "{{ 'silversearcher-ag' if ansible_pkg_mgr != 'homebrew' else 'the_silver_searcher' }}"
+        -   autojump
+        -   git
+        -   tig
+        -   htop
+        -   cmigemo
+        -   colordiff
+        -   python-is-python3
+        -   black
+
+-   name: Dump facts for debugging playbook
+    delegate_to: localhost
+    copy:
+        content: '{{ hostvars[inventory_hostname] | to_nice_json }}'
+        dest: /dev/shm/ansible_facts_{{inventory_hostname}}.json
+
+-   name: Install Packages (Ubuntu 22.04)
+    become: '{{ should_be_root }}'
+    package:
+        name:
+        -   pre-commit
+        -   python3-pyls
+        -   exa
+        -   duf
+        -   plocate
+        -   zoxide
+    when: (ansible_distribution_version | float) >= 22.04
+
+-   name: Setting dircolors
+    become: no
+    template:
+        src: dircolors/dircolors.j2
+        dest: ~/.dircolors
+
+-   name: Setting tmux
+    become: no
+    template:
+        src: tmux/tmux.conf.j2
+        dest: ~/.tmux.conf
+
+-   name: Setting SSH
+    become: no
+    blockinfile:
+        path: ~/.ssh/config
+        block: |
+            Host *
+                 ControlMaster               auto
+                 ControlPath                 ~/.ssh/mux/%r@%h:%p
+                 ControlPersist              10
+                 ServerAliveInterval         60
+                 ServerAliveCountMax         10
+                 ForwardAgent                yes
+                 Compression                 yes
+                 HashKnownHosts              no
+                 PreferredAuthentications    publickey
+                 SendEnv                     TMUX_PANE
+
+                 IdentityFile                ~/.ssh/home.id_rsa
+        insertbefore: BOF
+        create: yes
+
+-   name: Create SSH ControlPath directory
+    become: no
+    file:
+        path: ~/.ssh/mux
+        state: directory
+
+-   name: Setting Zsh
+    become: no
+    template:
+        src: zsh/{{ item }}.j2
+        dest: ~/.{{ item }}
+    with_items:
+    -   zshenv
+    -   zshrc
+
+-   name: Setting zplug
+    become: no
+    git:
+        repo: https://github.com/zplug/zplug.git
+        dest: .zplug
+
+-   name: Settign Emacs (create directory)
+    become: no
+    file:
+        path: ~/.emacs.d
+        state: directory
+
+-   name: Setting Emacs
+    become: no
+    template:
+        src: emacs/init.el.j2
+        dest: ~/.emacs.d/init.el
+
+-   name: Settign Emacs for root (create directory)
+    file:
+        path: /root/.emacs.d
+        state: directory
+    when: should_be_root
+
+-   name: Setting Emacs for root
+    template:
+        src: emacs/init.el.j2
+        dest: /root/.emacs.d/init.el
+    when: should_be_root
+
+-   name: Setting Default Shell
+    user:
+        name: '{{ ansible_env.SUDO_USER }}'
+        shell: /bin/zsh
+    when: ansible_pkg_mgr != 'homebrew'
+
+-   name: Setting Git
+    become: no
+    template:
+        src: git/gitconfig.j2
+        dest: ~/.gitconfig
+
+-   name: Install Delta (x86)
+    apt:
+        deb: https://github.com/dandavison/delta/releases/download/0.13.0/git-delta_0.13.0_amd64.deb
+    when: ansible_architecture == 'x86_64'
+
+-   name: Install Delta (ARM)
+    apt:
+        deb: https://github.com/dandavison/delta/releases/download/0.13.0/git-delta_0.13.0_arm64.deb
+    when: ansible_architecture == 'aarch64'
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:

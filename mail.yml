@@ -8,7 +8,3 @@
     roles:
     -   common
     -   mail
-
-    handlers:
-
-    tasks:

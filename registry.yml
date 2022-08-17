@@ -7,7 +7,3 @@
     roles:
     -   common
     -   registry
-
-    handlers:
-
-    tasks:

@@ -1,0 +1,13 @@
+-   hosts: all
+    vars_files:
+    -   vars/network.yml
+
+    become: yes
+
+    roles:
+    -   common
+    -   kubeadm
+
+    handlers:
+
+    tasks:

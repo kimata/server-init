@@ -26,6 +26,13 @@
         line: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
         create: yes
 
+-   name: Check
+    apt:
+        pkg:
+        -   kubeadm
+    check_mode: yes
+    register: kubeadm
+
 -   name: Install containerd Kubernetes Packages
     apt:
         pkg:
@@ -47,7 +54,7 @@
 
 -   name: Setting kernel module
     lineinfile:
-        path: /etc/modules-load.d/kubenetes.conf
+        path: /etc/modules-load.d/kubernetes.conf
         line: "{{item}}"
         create: yes
     with_items:
@@ -62,19 +69,19 @@
 -   name: Setting Sysctl
     lineinfile:
         path: /etc/sysctl.conf
-        regexp: '^{{item.regexp}}.*'
-        line: '{{item.line}}=1'
+        regexp: '^{{item.name}}.*'
+        line: '{{item.name}}={{item.value}}'
     with_items:
-    -   regexp: net.ipv4.ip_forward
-        line: net.ipv4.ip_forward=1
-    -   regexp: net.bridge.bridge-nf-call-ip6table
-        line: net.bridge.bridge-nf-call-ip6table=1
-    -   regexp: net.bridge.bridge-nf-call-iptables
-        line: net.bridge.bridge-nf-call-iptables=1
-    -   regexp: fs.inotify.max_user_instances
-        line: fs.inotify.max_user_instances=100000
-    -   regexp: fs.inotify.max_user_watches
-        line: fs.inotify.max_user_watches=100000
+    -   name: net.ipv4.ip_forward
+        value: 1
+    -   name: net.bridge.bridge-nf-call-ip6table
+        value: 1
+    -   name: net.bridge.bridge-nf-call-iptables
+        value: 1
+    -   name: fs.inotify.max_user_instances
+        value: f100000
+    -   name: fs.inotify.max_user_watches
+        value: 100000
     notify: reload sysctl
 
 -   name: Create containerd config directory
@@ -119,6 +126,17 @@
         groups: docker
         append: yes
 
+-   name: Setting docker
+    blockinfile:
+        path: /etc/docker/daemon.json
+        block: |
+            {
+                "insecure-registries" : [
+                    "registry.green-rabbit.net"
+                ]
+            }
+        create: yes
+
 -   name: Edit eviction threshold
     blockinfile:
         path: /var/lib/kubelet/config.yaml
@@ -129,6 +147,11 @@
     # NOTE: このファイルが存在しない場合，まだ kubeadm init や join 前で，それらを実行すると
     # 上書きされてしまうものの，ここでコケると不便なので，とりあえず作成する．
         create: yes
+    when: "'raspi' in ansible_kernel"
+
+-   name: Remove Apt cache
+    apt:
+        autoclean: yes
     when: "'raspi' in ansible_kernel"
 
 -   name: List old log files (1)
@@ -179,9 +202,11 @@
         regexp: '\sswap\s'
         state: absent
 
-# -   name: Reboot
-#     reboot:
-#         reboot_timeout: 300
+# NOTE: 最初に kubeadm をインストールしたときは再起動する
+-   name: Reboot
+    reboot:
+        reboot_timeout: 300
+    when: kubeadm.changed
 
 # Local Variables:
 # mode: yaml

@@ -5,6 +5,12 @@
         -   ca-certificates
         -   curl
 
+-   name: Uninstall Packages
+    package:
+        name:
+        -   prometheus-node-exporter # NOTE: DaemonSet で配置するので削除しておく
+        state: absent
+
 -   name: Install Docker public signing key
     shell: curl -sSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
 

@@ -36,6 +36,7 @@
     apt:
         pkg:
         -   kubeadm
+        update_cache: yes
     check_mode: yes
     register: kubeadm
 
@@ -47,7 +48,6 @@
         -   kubelet
         -   kubeadm
         -   kubectl
-        update_cache: yes
 
 -   name: Hold Kubernetes Packages
     dpkg_selections:

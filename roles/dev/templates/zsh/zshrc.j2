@@ -180,7 +180,7 @@ if (which dircolors >& /dev/null) then	# dircolors
 fi
 
 if (which exa >& /dev/null) then	    # ls
-    alias ls='exa --color=auto'
+    alias ls='exa --color=auto -gFh'
 elif (which gnuls >& /dev/null) then
     alias ls='gnuls -F --color=auto'
 elif (uname | grep Linux >& /dev/null) then

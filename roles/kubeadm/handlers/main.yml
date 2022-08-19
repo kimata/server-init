@@ -4,6 +4,10 @@
 -   name: reload mount
     shell: mount -a
 
+-   name: reboot
+    reboot:
+        reboot_timeout: 300
+
 # Local Variables:
 # mode: yaml
 # tab-width: 4

@@ -32,13 +32,6 @@
         line: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
         create: yes
 
--   name: Check
-    apt:
-        pkg:
-        -   kubeadm
-        update_cache: yes
-    check_mode: yes
-    register: kubeadm
 
 -   name: Install containerd Kubernetes Packages
     apt:
@@ -48,6 +41,8 @@
         -   kubelet
         -   kubeadm
         -   kubectl
+        update_cache: yes
+    notify: reboot
 
 -   name: Hold Kubernetes Packages
     dpkg_selections:
@@ -207,12 +202,6 @@
         path: /etc/fstab
         regexp: '\sswap\s'
         state: absent
-
-# NOTE: 最初に kubeadm をインストールしたときは再起動する
--   name: Reboot
-    reboot:
-        reboot_timeout: 300
-    when: kubeadm.changed
 
 # Local Variables:
 # mode: yaml

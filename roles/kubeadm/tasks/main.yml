@@ -148,6 +148,7 @@
     # NOTE: このファイルが存在しない場合，まだ kubeadm init や join 前で，それらを実行すると
     # 上書きされてしまうものの，ここでコケると不便なので，とりあえず作成する．
         create: yes
+    notify: restart kubelet
     when: "'raspi' in ansible_kernel"
 
 -   name: Remove Apt cache

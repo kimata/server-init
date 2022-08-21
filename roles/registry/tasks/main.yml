@@ -39,6 +39,12 @@
     shell: /home/{{ansible_env.SUDO_USER}}/service/harbor/install.sh
     when: not docker_compose.stat.exists
 
+-   name: Install harbor.service
+    template:
+        src: harbor/harbor.service.j2
+        dest: /etc/systemd/system/harbor.service
+    notify: enable harbor service
+
 -   name: Start Harbor
     docker_compose:
         project_src: /home/{{ansible_env.SUDO_USER}}/service/harbor/

@@ -1,15 +1,26 @@
--   name: Install Packages
+-   name: Install Packages (server)
     package:
         name:
         -   nut-server
-    when: host[ansible_hostname].mode == 'server'
+    when: host[ansible_hostname].mode == 'netserver'
+
+-   name: Install Packages (client)
+    package:
+        name:
+        -   nut-client
 
 -   name: Setting NUT - udev
     template:
         src: 'udev/90-omron-ups.rules.j2'
         dest: '/etc/udev/rules.d/90-omron-ups.rules'
     notify: reload udev
-    when: host[ansible_hostname].mode == 'server'
+    when: host[ansible_hostname].mode == 'netserver'
+
+-   name: Setting NUT - nut.conf
+    replace:
+        path: '/etc/nut/nut.conf'
+        regexp: '^#?MODE=.*'
+        replace: 'MODE={{host[ansible_hostname].mode}}'
 
 -   name: Setting NUT - modify systemd definition
     lineinfile:
@@ -27,14 +38,7 @@
     -   regexp: 'BindsTo=.*'
         line: 'BindsTo=sys-subsystem-ups-devices-ups.device'
         insertbefore: '^\[Service\]'
-    when: host[ansible_hostname].mode == 'server'
-
--   name: Setting NUT - nut.conf
-    replace:
-        path: '/etc/nut/nut.conf'
-        regexp: '^#?MODE=.*'
-        replace: 'MODE=netserver'
-    when: host[ansible_hostname].mode == 'server'
+    when: host[ansible_hostname].mode == 'netserver'
 
 -   name: Setting NUT - ups.conf
     blockinfile:
@@ -60,7 +64,7 @@
             default.battery.voltage.low = 23.3
         insertbefore: EOF
     notify: restart nut-server
-    when: host[ansible_hostname].mode == 'server'
+    when: host[ansible_hostname].mode == 'netserver'
 
 -   name: Setting NUT - upsd.conf
     blockinfile:
@@ -69,7 +73,7 @@
             LISTEN 0.0.0.0
         insertbefore: EOF
     notify: restart nut-server
-    when: host[ansible_hostname].mode == 'server'
+    when: host[ansible_hostname].mode == 'netserver'
 
 -   name: Setting NUT - upsd.users
     blockinfile:
@@ -80,7 +84,7 @@
             upsmon master
         insertbefore: EOF
     notify: restart nut-server
-    when: host[ansible_hostname].mode == 'server'
+    when: host[ansible_hostname].mode == 'netserver'
 
 -   name: Setting NUT - upsmon.conf
     blockinfile:

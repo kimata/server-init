@@ -1,4 +1,8 @@
 host:
     hems:
-        mode: server
+        mode: netserver
+        monitor: bl75t@hems
+
+    database:
+        mode: netclient
         monitor: bl75t@hems

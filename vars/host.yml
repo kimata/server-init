@@ -1,0 +1,4 @@
+host:
+    hems:
+        mode: server
+        monitor: bl75t@hems

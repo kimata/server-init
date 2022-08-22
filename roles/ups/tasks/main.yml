@@ -1,0 +1,92 @@
+-   name: Install Packages
+    package:
+        name:
+        -   nut-server
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - udev
+    template:
+        src: 'udev/90-omron-ups.rules.j2'
+        dest: '/etc/udev/rules.d/90-omron-ups.rules'
+    notify: reload udev
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - modify systemd definition
+    lineinfile:
+        path: '/lib/systemd/system/nut-server.service'
+        regexp: '{{ item.regexp }}'
+        line: '{{ item.line }}'
+        insertbefore: '{{ item.insertbefore }}'
+    with_items:
+    -   regexp: 'After=.*'
+        line: 'After=nut-driver.service network-online.target sys-subsystem-ups-devices-ups.device'
+        insertbefore: '^\[Service\]'
+    -   regexp: 'WantedBy=.*'
+        line: 'WantedBy=network-online.target sys-subsystem-ups-devices-ups.device'
+        insertbefore: 'EOF'
+    -   regexp: 'BindsTo=.*'
+        line: 'BindsTo=sys-subsystem-ups-devices-ups.device'
+        insertbefore: '^\[Service\]'
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - nut.conf
+    replace:
+        path: '/etc/nut/nut.conf'
+        regexp: '^#?MODE=.*'
+        replace: 'MODE=netserver'
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - ups.conf
+    blockinfile:
+        dest: '/etc/nut/ups.conf'
+        content: |
+            [bl50t]
+            driver = blazer_usb
+            port = /dev/ups
+            desc = "Omron UPS BL50T"
+            vendorid = 0590
+            productid = 00cb
+            subdriver = ippon
+            default.battery.voltage.high = 27.5
+            default.battery.voltage.low = 23.3
+            [bl75t]
+            driver = blazer_usb
+            port = /dev/ups
+            desc = "Omron UPS BL75T"
+            vendorid = 0590
+            productid = 00cc
+            subdriver = ippon
+            default.battery.voltage.high = 27.5
+            default.battery.voltage.low = 23.3
+        insertbefore: EOF
+    notify: restart nut-server
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - upsd.conf
+    blockinfile:
+        dest: '/etc/nut/upsd.conf'
+        content: |
+            LISTEN 0.0.0.0
+        insertbefore: EOF
+    notify: restart nut-server
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - upsd.users
+    blockinfile:
+        dest: '/etc/nut/upsd.users'
+        content: |
+            [upsmon]
+            password = upspass
+            upsmon master
+        insertbefore: EOF
+    notify: restart nut-server
+    when: host[ansible_hostname].mode == 'server'
+
+-   name: Setting NUT - upsmon.conf
+    blockinfile:
+        dest: '/etc/nut/upsmon.conf'
+        content: |
+            MONITOR {{host[ansible_hostname].monitor}} 1 upsmon upspass master
+        insertbefore: EOF
+        create: true
+    notify: restart nut-client

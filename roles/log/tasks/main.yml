@@ -37,5 +37,6 @@
         restarted: yes
     register: output
 
--   ansible.builtin.debug:
+-   name: Display result
+    debug:
         var: output

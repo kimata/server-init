@@ -1,6 +1,12 @@
 host:
     hems:
         mode: netserver
+        model: bl75t
+        monitor: bl75t@hems
+
+    worker:
+        mode: netserver
+        model: bl50t
         monitor: bl75t@hems
 
     database:

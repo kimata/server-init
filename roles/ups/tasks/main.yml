@@ -44,6 +44,7 @@
     blockinfile:
         dest: '/etc/nut/ups.conf'
         content: |
+            {% if host[ansible_hostname].model == 'bl50t' %}
             [bl50t]
             driver = blazer_usb
             port = /dev/ups
@@ -53,6 +54,8 @@
             subdriver = ippon
             default.battery.voltage.high = 27.5
             default.battery.voltage.low = 23.3
+            {% endif %}
+            {% if host[ansible_hostname].model == 'bl75t' %}
             [bl75t]
             driver = blazer_usb
             port = /dev/ups
@@ -62,6 +65,7 @@
             subdriver = ippon
             default.battery.voltage.high = 27.5
             default.battery.voltage.low = 23.3
+            {% endif %}
         insertbefore: EOF
     notify: restart nut-server
     when: host[ansible_hostname].mode == 'netserver'

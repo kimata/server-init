@@ -127,16 +127,19 @@
         groups: docker
         append: yes
 
+-   name: Load /etc/docker/daemon.json
+    shell:
+        cmd: cat /etc/docker/daemon.json || echo '{}'
+    register: daemon_json_txt
+
+-   name: Parse daemon.json
+    set_fact:
+        daemon_json: '{{ daemon_json_txt.stdout | from_json }}'
+
 -   name: Setting docker
-    blockinfile:
-        path: /etc/docker/daemon.json
-        block: |
-            {
-                "insecure-registries" : [
-                    "registry.green-rabbit.net"
-                ]
-            }
-        create: yes
+    copy:
+        dest: /etc/docker/daemon.json
+        content: '{{ daemon_json | combine( { "insecure-registries": ["registry.green-rabbit.net"] } ) | to_json }}'
 
 -   name: Edit eviction threshold
     blockinfile:

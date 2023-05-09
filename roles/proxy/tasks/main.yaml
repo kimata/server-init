@@ -1,0 +1,71 @@
+-   name: Install Packages
+    package:
+        name:
+        -   haproxy
+
+-   name: Setting HAProxy
+    blockinfile:
+        path: /etc/haproxy/haproxy.cfg
+        block: |
+            frontend k8s-controller
+                mode tcp
+                bind *:6443
+                option tcplog
+                default_backend k8s-controller
+            backend k8s-controller
+                mode tcp
+                balance roundrobin
+                server kube-ctrl-1 192.168.0.21:6443 check
+                # server kube-ctrl-2 192.168.0.22:6443
+                # server kube-ctrl-3 192.168.0.23:6443
+
+            frontend fluentd
+                mode tcp
+                bind *:24224
+                option tcplog
+                default_backend fluentd
+            backend fluentd
+                mode tcp
+                server fluentd-1 192.168.0.10:24224 check
+
+            frontend fluentd-www
+                mode http
+                bind *:8888
+                default_backend fluentd-www
+            backend fluentd-www
+                option httpchk GET /
+                http-check expect status 200
+                mode http
+                server fluentd-www 192.168.0.10:8888 check
+
+            frontend grafana
+                mode http
+                bind *:3000
+                default_backend grafana
+            backend grafana
+                option httpchk GET /login
+                http-check expect status 200
+                mode http
+                server grafana 192.168.0.10:3000 check
+
+            frontend influxdb
+                mode http
+                bind *:8086
+                default_backend influxdb
+            backend influxdb
+                option httpchk GET /signin
+                http-check expect status 200
+                mode http
+                server influxdb 192.168.0.10:8086 check
+
+            listen stats
+                bind :9999
+                mode http
+                stats enable
+                stats uri /
+    notify: restart haproxy
+
+# Local Variables:
+# mode: yaml
+# tab-width: 4
+# End:

@@ -1,0 +1,5 @@
+-   name: enable harbor service
+    systemd:
+        name: harbor
+        daemon_reload: yes
+        enabled: yes

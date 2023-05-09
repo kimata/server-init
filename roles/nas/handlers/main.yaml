@@ -1,0 +1,10 @@
+-   name: reload mount
+    shell: mount -a
+
+-   name: load kernel modules
+    systemd:
+        name: systemd-modules-load
+        state: restarted
+
+-   name: restart samba
+    service: name=smbd state=restarted

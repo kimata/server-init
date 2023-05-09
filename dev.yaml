@@ -1,0 +1,8 @@
+-   hosts: all
+    vars:
+        should_be_root: "{{ ansible_pkg_mgr != 'homebrew' }}"
+
+    become: yes
+
+    roles:
+    -   dev

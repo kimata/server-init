@@ -1,0 +1,10 @@
+-   hosts: all
+    vars_files:
+    -   vars/network.yaml
+    -   vars/host.yaml
+
+    become: yes
+
+    roles:
+    -   common
+    -   ups

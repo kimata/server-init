@@ -1,0 +1,42 @@
+-   name: Install Packages
+    apt:
+        pkg:
+        -   docker-compose
+
+-   name: Join docker group
+    user:
+        name: '{{ ansible_env.SUDO_USER }}'
+        groups: docker
+        append: yes
+
+-   name: Create directory
+    file:
+        path: /home/{{ansible_env.SUDO_USER}}/service/{{item}}
+        state: directory
+        mode: '0777'
+        recurse: yes
+    with_items:
+    -   loki/conf
+    -   loki/data
+    -   grafana/data
+    -   grafana/conf
+
+-   name: Place docker-compose recipe
+    become: no
+    template:
+        src: grafana/{{item.file}}.j2
+        dest: /home/{{ansible_env.SUDO_USER}}/service/{{item.path}}/{{item.file}}
+    with_items:
+    -   {path: '', file: 'docker-compose.yaml'}
+    -   {path: 'loki/conf', file: 'loki-config.yaml'}
+    -   {path: 'grafana/conf', file: 'grafana.ini'}
+
+-   name: Start Grafana
+    docker_compose:
+        project_src: /home/{{ansible_env.SUDO_USER}}/service
+        restarted: yes
+    register: output
+
+-   name: Display result
+    debug:
+        var: output

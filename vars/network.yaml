@@ -1,0 +1,6 @@
+network:
+    subnet: 192.168.0.0
+    netmask: 21
+    domain: green-rabbit.net
+    mail: mail-local
+    ntp: ntp.nict.jp

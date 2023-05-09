@@ -1,0 +1,7 @@
+-   name: restart postfix
+    service:
+        name: postfix
+        state: restarted
+
+-   name: update sasl password
+    shell: postmap hash:/etc/postfix/sasl/passwd

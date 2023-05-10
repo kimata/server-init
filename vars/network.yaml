@@ -1,5 +1,6 @@
 network:
     subnet: 192.168.0.0
+    dns: 192.168.0.1
     netmask: 21
     domain: green-rabbit.net
     mail: mail-local

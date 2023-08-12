@@ -82,7 +82,7 @@
 ; helm
 (package-install 'helm)
 
-(require 'helm-config)
+(require 'helm)
 (helm-mode 1)
 
 (define-key global-map          (kbd "M-x"      ) 'helm-M-x)
@@ -163,7 +163,14 @@
 (package-install 'yaml-mode)
 (package-install 'json-mode)
 (package-install 'vue-mode)
+(package-install 'web-mode)
 (package-install 'markdown-mode)
+
+(add-to-list 'auto-mode-alist '("\\.ts[x]?\\'" . web-mode))
+(add-hook 'web-mode-hook 'lsp)
+(setq web-mode-markup-indent-offset 4)
+(setq web-mode-css-indent-offset 4)
+(setq web-mode-code-indent-offset 4)
 
 (package-install 'python-black)
 (add-hook 'python-mode-hook

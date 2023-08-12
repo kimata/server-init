@@ -1,31 +1,25 @@
 -   name: Install Packages
-    become: '{{ should_be_root }}'
+    become: "{{ ansible_distribution == 'Ubuntu' }}"
     package:
+    # NOTE: 自動判定が上手くいかない場合があるので，強制的に上書きする
+        use: "{{ 'homebrew' if ansible_os_family == 'Darwin' else ansible_pkg_mgr }}"
         name:
-        -   "{{ 'emacs-nox' if ansible_pkg_mgr != 'homebrew' else 'emacs' }}"
+        -   "{{ 'emacs-nox' if ansible_distribution == 'Ubuntu'  else 'emacs' }}"
         -   zsh
         -   tmux
+        -   btop
         -   keychain
-        -   "{{ 'silversearcher-ag' if ansible_pkg_mgr != 'homebrew' else 'the_silver_searcher' }}"
+        -   "{{ 'silversearcher-ag' if ansible_distribution == 'Ubuntu' else 'the_silver_searcher' }}"
         -   autojump
         -   git
         -   tig
-        -   htop
         -   cmigemo
         -   colordiff
-        -   python-is-python3
-        -   pyflakes3
         -   black
         -   mosh
 
--   name: Dump facts for debugging playbook
-    delegate_to: localhost
-    copy:
-        content: '{{ hostvars[inventory_hostname] | to_nice_json }}'
-        dest: /dev/shm/ansible_facts_{{inventory_hostname}}.json
-
 -   name: Install Packages (Ubuntu 22.04)
-    become: '{{ should_be_root }}'
+    become: yes
     package:
         name:
         -   pre-commit
@@ -34,7 +28,7 @@
         -   duf
         -   plocate
         -   zoxide
-    when: (ansible_distribution_version | float) >= 22.04
+    when: (ansible_distribution == 'Ubuntu') and ((ansible_distribution_version | float) >= 22.04)
 
 -   name: Setting dircolors
     become: no
@@ -66,6 +60,15 @@
                  SendEnv                     TMUX_PANE
 
                  IdentityFile                ~/.ssh/home.id_rsa
+
+            Host rasp*
+                 User                        ubuntu
+                 IdentityFile                ~/.ssh/hobby.id_rsa
+
+            Host rpi-cm4*
+                 User                        ubuntu
+                 IdentityFile                ~/.ssh/hobby.id_rsa
+
         insertbefore: BOF
         create: yes
 
@@ -103,22 +106,25 @@
         dest: ~/.emacs.d/init.el
 
 -   name: Settign Emacs for root (create directory)
+    become: yes
     file:
         path: /root/.emacs.d
         state: directory
-    when: should_be_root
+    when: root_config
 
 -   name: Setting Emacs for root
+    become: yes
     template:
         src: emacs/init.el.j2
         dest: /root/.emacs.d/init.el
-    when: should_be_root
+    when: root_config
 
 -   name: Setting Default Shell
+    become: yes
     user:
-        name: '{{ ansible_env.SUDO_USER }}'
+        name: '{{ ansible_env.LOGNAME }}'
         shell: /bin/zsh
-    when: ansible_pkg_mgr != 'homebrew'
+    when: ansible_distribution == 'Ubuntu'
 
 -   name: Setting Git
     become: no
@@ -127,14 +133,16 @@
         dest: ~/.gitconfig
 
 -   name: Install Delta (x86)
+    become: yes
     apt:
         deb: https://github.com/dandavison/delta/releases/download/0.13.0/git-delta_0.13.0_amd64.deb
-    when: ansible_architecture == 'x86_64'
+    when: (ansible_distribution == 'Ubuntu') and (ansible_architecture == 'x86_64')
 
 -   name: Install Delta (ARM)
+    become: yes
     apt:
         deb: https://github.com/dandavison/delta/releases/download/0.13.0/git-delta_0.13.0_arm64.deb
-    when: ansible_architecture == 'aarch64'
+    when: (ansible_distribution == 'Ubuntu') and (ansible_architecture == 'aarch64')
 
 # Local Variables:
 # mode: yaml

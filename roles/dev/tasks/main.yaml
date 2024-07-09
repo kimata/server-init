@@ -18,17 +18,29 @@
         -   black
         -   mosh
 
--   name: Install Packages (Ubuntu 22.04)
+-   name: Install Packages (Ubuntu 22.04 or later)
     become: yes
     package:
         name:
         -   pre-commit
-        -   python3-pyls
-        -   exa
         -   duf
         -   plocate
         -   zoxide
     when: (ansible_distribution == 'Ubuntu') and ((ansible_distribution_version | float) >= 22.04)
+
+-   name: Install Packages (Ubuntu 22.04)
+    become: yes
+    package:
+        name:
+        -   exa
+    when: (ansible_distribution == 'Ubuntu') and (ansible_distribution_version == '22.04')
+
+-   name: Install Packages (Ubuntu 24.04 or later)
+    become: yes
+    package:
+        name:
+        -   eza
+    when: (ansible_distribution == 'Ubuntu') and ((ansible_distribution_version | float) >= 24.04)
 
 -   name: Setting dircolors
     become: no

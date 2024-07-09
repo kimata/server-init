@@ -5,6 +5,7 @@
         -   zfsutils-linux
         -   nfs-kernel-server
         -   e2fsprogs
+        -   smartmontools
         state: present
 
 -   name: Setting Kernel Modules

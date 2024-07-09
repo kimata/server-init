@@ -186,14 +186,16 @@ if (which dircolors >& /dev/null) then	# dircolors
    eval `dircolors ~/.dircolors`
 fi
 
-if (which exa >& /dev/null) then	    # ls
-    alias ls='exa --color=auto -gFh'
+if (which eza >& /dev/null) then	    # ls
+    alias ls='eza --color=auto -gh --icons --git -F'
+elif (which exa >& /dev/null) then
+    alias ls='exa --color=auto -gh --icons -F'
 elif (which gnuls >& /dev/null) then
-    alias ls='gnuls -F --color=auto'
+    alias ls='gnuls --color=auto -F'
 elif (uname | grep Linux >& /dev/null) then
-    alias ls='ls -F --color=auto'
+    alias ls='ls --color=auto -F'
 else
-    alias ls='ls -FG'
+    alias ls='ls -G -F'
 fi
 
 if (which colordiff >& /dev/null) then	# diff

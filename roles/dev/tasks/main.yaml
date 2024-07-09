@@ -13,10 +13,12 @@
         -   autojump
         -   git
         -   tig
+        -   flake8
         -   cmigemo
         -   colordiff
         -   black
         -   mosh
+        -   python3-pip
 
 -   name: Install Packages (Ubuntu 22.04 or later)
     become: yes

@@ -3,8 +3,8 @@
         manager: apt
 
 -   name: Install Packages
-    apt:
-        pkg:
+    package:
+        name:
         -   emacs-nox
         -   git
         -   lsb-release

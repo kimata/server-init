@@ -7,7 +7,6 @@
         -   "{{ 'emacs-nox' if ansible_distribution == 'Ubuntu'  else 'emacs' }}"
         -   zsh
         -   tmux
-        -   btop
         -   keychain
         -   "{{ 'silversearcher-ag' if ansible_distribution == 'Ubuntu' else 'the_silver_searcher' }}"
         -   autojump
@@ -19,6 +18,7 @@
         -   black
         -   mosh
         -   python3-pip
+        update_cache: yes
 
 -   name: Install Packages (Ubuntu 22.04 or later)
     become: yes

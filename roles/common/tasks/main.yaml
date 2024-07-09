@@ -10,7 +10,7 @@
         -   lsb-release
         -   net-tools
         -   postfix
-        -   glances
+        -   btop
         update_cache: yes
 
 -   name: Change Apt Repository

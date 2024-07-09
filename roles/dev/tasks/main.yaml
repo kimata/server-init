@@ -149,13 +149,15 @@
 -   name: Install Delta (x86)
     become: yes
     apt:
-        deb: https://github.com/dandavison/delta/releases/download/0.13.0/git-delta_0.13.0_amd64.deb
+        deb: https://github.com/dandavison/delta/releases/download/0.17.0/git-delta_0.17.0_amd64.deb
+        only_upgrade: true
     when: (ansible_distribution == 'Ubuntu') and (ansible_architecture == 'x86_64')
 
 -   name: Install Delta (ARM)
     become: yes
     apt:
-        deb: https://github.com/dandavison/delta/releases/download/0.13.0/git-delta_0.13.0_arm64.deb
+        deb: https://github.com/dandavison/delta/releases/download/0.17.0/git-delta_0.17.0_arm64.deb
+        only_upgrade: true
     when: (ansible_distribution == 'Ubuntu') and (ansible_architecture == 'aarch64')
 
 # Local Variables:

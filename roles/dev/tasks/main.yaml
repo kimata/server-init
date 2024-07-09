@@ -137,7 +137,7 @@
     become: yes
     user:
         name: '{{ ansible_env.LOGNAME }}'
-        shell: /bin/zsh
+        shell: /usr/bin/zsh
     when: ansible_distribution == 'Ubuntu'
 
 -   name: Setting Git

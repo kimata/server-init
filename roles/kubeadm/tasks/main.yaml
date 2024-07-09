@@ -107,18 +107,42 @@
     -   regexp: '            SystemdCgroup = false'
         line: '            SystemdCgroup = true'
         insertafter: 'plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options'
+
     -   regexp: 'endpoint = \["http://registry.green-rabbit.net"\]'
         line: '          endpoint = ["http://registry.green-rabbit.net"]'
         insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+
     -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"\]'
         line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"]'
         insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+
+    -   regexp: 'endpoint = \["http://registry.green-rabbit.net:5000"\]'
+        line: '          endpoint = ["http://registry.green-rabbit.net:5000"]'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+
+    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net:5000"\]'
+        line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net:5000"]'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+
     -   regexp: 'insecure_skip_verify = true'
         line: '          insecure_skip_verify = true'
         insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+
     -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls\]'
         line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls]'
         insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+
+    -   regexp: 'insecure_skip_verify = true'
+        line: '          insecure_skip_verify = true'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+
+    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net:5000".tls\]'
+        line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net:5000".tls]'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+
+    -   regexp: 'discard_unpacked_layers'
+        line: '      discard_unpacked_layers = true'
+        insertafter: '\[plugins."io.containerd.grpc.v1.cri".containerd\]'
 
 
 -   name: Join docker group
@@ -139,7 +163,7 @@
 -   name: Setting docker
     copy:
         dest: /etc/docker/daemon.json
-        content: '{{ daemon_json | combine( { "insecure-registries": ["registry.green-rabbit.net"] } ) | to_json }}'
+        content: '{{ daemon_json | combine( { "insecure-registries": ["registry.green-rabbit.net", "registry.green-rabbit.net:5000"] } ) | to_json }}'
 
 -   name: Edit eviction threshold
     blockinfile:

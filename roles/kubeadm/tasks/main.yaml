@@ -80,7 +80,7 @@
     -   name: net.bridge.bridge-nf-call-iptables
         value: 1
     -   name: fs.inotify.max_user_instances
-        value: f100000
+        value: 100000
     -   name: fs.inotify.max_user_watches
         value: 100000
     notify: reload sysctl

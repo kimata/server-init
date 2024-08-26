@@ -1,3 +1,6 @@
+-   name: update certificate
+    shell: update-ca-certificates
+
 -   name: reload sysctl
     shell: sysctl -p
 

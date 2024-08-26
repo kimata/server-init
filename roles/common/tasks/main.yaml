@@ -5,6 +5,7 @@
 -   name: Install Packages
     package:
         name:
+        -   ca-certificates
         -   emacs-nox
         -   git
         -   lsb-release
@@ -30,6 +31,15 @@
     with_items:
     -   en_US.UTF-8
     -   ja_JP.UTF-8
+
+-   name: Install Local CA Certificate
+    template:
+        src: ca/local-ca.crt.j2
+        dest: /usr/local/share/ca-certificates/local-ca.crt
+        owner: root
+        group: root
+        mode: 0444
+    notify: update certificate
 
 -   name: Setting Sysctl
     template:

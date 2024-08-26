@@ -11,10 +11,12 @@ indent-width = 4
 
 [lint]
 select = ["ALL"]
-#ignore = ["E501", "PGH", "DJ", "D", "T20", "ERA", "C90", "ANN101", "FA102", "RUF001", "PLR0915", "S101", "S311", "S104"]
+ignore = ["D100", "D101", "D102", "D211","D212", "FBT002", "BLE001", "RET505", "TRY300", "FBT003", "RUF001", "RUF002", "RUF003", "RUF012", "COM812", "D103", "D400", "D415", "ANN", "N806", "PLR2004", "ERA001", "PLW0602"]
 
-fixable = ["I", "SIM118"]
+fixable = ["I"]
 unfixable = []
+
+extend-select = ["I"]
 
 [format]
 quote-style = "double"

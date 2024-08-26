@@ -3,12 +3,19 @@
 ; パッケージ
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'package)
-(add-to-list 'package-archives '("gnu"   . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
-(add-to-list 'package-archives '("org"   . "http://orgmode.org/elpa/"))
+(add-to-list 'package-archives '("melpa"        . "http://melpa.org/packages/") t)
+(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives '("gnu"          . "http://elpa.gnu.org/packages/") t)
+(add-to-list 'package-archives '("gnu-devel"    .  "https://elpa.gnu.org/devel/") t)
+(add-to-list 'package-archives '("org"          . "http://orgmode.org/elpa/") t)
 
 (package-initialize)
-(unless package-archive-contents (package-refresh-contents))
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(require 'use-package)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 基本設定
@@ -27,9 +34,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 色
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(package-install 'moe-theme)
-(require 'moe-theme)
-(moe-dark)
+ (use-package moe-theme
+   :ensure t
+   :config
+   (moe-dark))
 
 (global-font-lock-mode t)
 (setq font-lock-maximum-decoration t)
@@ -38,111 +46,143 @@
 ; 表示
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 行
+(global-display-line-numbers-mode t)
+(setq display-line-numbers-width 3)
+(set-face-attribute 'line-number-current-line nil
+                    :foreground "coral"
+                    :background "gray30"
+                    )
+
 (setq line-number-display-limit-width 10000)
 (line-number-mode t)
 (column-number-mode t)
 
 ; 括弧
+(use-package smartparens
+   :ensure t
+   :delight
+   :custom
+  (electric-pair-mode nil)
+  :config
+  (require 'smartparens-config)
+  (smartparens-global-strict-mode t)
+  (show-smartparens-global-mode t)
+)
+
 (show-paren-mode t)
-(setq show-paren-delay 0)
-(setq show-paren-style 'parenthesis)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 便利機能
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; 自動保存
-(package-install 'auto-save-buffers-enhanced)
-(setq auto-save-buffers-enhanced-interval 10)
-(auto-save-buffers-enhanced t)
+(use-package auto-save-buffers-enhanced
+  :ensure t
+  :config
+  (setq auto-save-buffers-enhanced-interval 10)
+  (auto-save-buffers-enhanced t))
 
 ; 日本語検索
-(package-install 'migemo)
-(require 'migemo)
-(setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict")
+(use-package migemo
+  :ensure t
+  :config
+  (setq migemo-dictionary "/usr/share/cmigemo/utf-8/migemo-dict"))
+
+; カーソル移動
+(use-package mwim
+  :ensure t
+  :bind (("C-a" . mwim-beginning-of-code-or-line)
+         ("C-e" . mwim-end-of-code-or-line)))
 
 ; カーソル位置を保存
-(package-install 'session)
-(setq session-save-file "~/.emacs-session")
-(add-hook 'after-init-hook 'session-initialize)
+(use-package session
+  :ensure t
+  :hook (after-init . session-initialize)
+  :config
+  (setq session-save-file "~/.emacs-session"))
 
 ; 最近使ったファイル
-(package-install 'recentf-ext)
-(setq recentf-max-saved-items 1000)
-(setq recentf-auto-cleanup 50)
-(setq recentf-auto-save-timer (run-with-idle-timer 30 t 'recentf-save-list))
-(recentf-mode 1)
+(use-package recentf-ext
+  :ensure t
+  :config
+  (setq recentf-max-saved-items 1000)
+  (setq recentf-auto-cleanup 50)
+  (setq recentf-auto-save-timer (run-with-idle-timer 30 t 'recentf-save-list))
+  (recentf-mode 1))
 
 ; 履歴を永続化
 (savehist-mode 1)
 
 ; スペースの自動挿入
-(package-install 'electric-spacing)
+(use-package electric-spacing
+    :ensure t)
 
 ; helm
-(package-install 'helm)
-
-(require 'helm)
-(helm-mode 1)
-
-(define-key global-map          (kbd "M-x"      ) 'helm-M-x)
-(define-key global-map          (kbd "C-x C-f"  ) 'helm-find-files)
-(define-key global-map          (kbd "C-x C-r"  ) 'helm-recentf)
-(define-key global-map          (kbd "M-y"      ) 'helm-show-kill-ring)
-(define-key helm-map            (kbd "C-h"      ) 'delete-backward-char)
-(define-key helm-find-files-map (kbd "C-h"      ) 'delete-backward-char)
-(define-key helm-find-files-map (kbd "TAB"      ) 'helm-execute-persistent-action)
-(define-key helm-map            (kbd "C-z"      ) 'helm-select-action)
 ; NOTE: helm-find-files では C-j でディレクトリオープン．C-l で上のディレクトリ移動．
+(use-package helm
+  :ensure t
+  :config
+  (helm-mode 1)
+  (define-key global-map          (kbd "M-x"      ) 'helm-M-x)
+  (define-key global-map          (kbd "C-x C-f"  ) 'helm-find-files)
+  (define-key global-map          (kbd "C-x C-r"  ) 'helm-recentf)
+  (define-key global-map          (kbd "M-y"      ) 'helm-show-kill-ring)
+  (define-key global-map          (kbd "C-x b"    ) 'helm-buffers-list)
+  (define-key helm-map            (kbd "C-h"      ) 'delete-backward-char)
+  (define-key helm-find-files-map (kbd "C-h"      ) 'delete-backward-char)
+  (define-key helm-find-files-map (kbd "TAB"      ) 'helm-execute-persistent-action)
+  (define-key helm-map            (kbd "C-z"      ) 'helm-select-action))
 
 ; ファイルが更新されたら読み込み直す
 (global-auto-revert-mode 1)
 
 ; バッファ切り替え
-(require 'ibuffer)
-(setq ibuffer-default-sorting-mode 'alphabetic)
+(use-package ibuffer
+  :ensure t
+  :config
+  (setq ibuffer-default-sorting-mode 'alphabetic)
+  (define-ibuffer-column row
+    (:name "Rows" :inline t)
+    (format "%5d" (count-lines (point-min) (point-max))))
+  (define-ibuffer-column coding
+    (:name " coding ")
+    (if (coding-system-get buffer-file-coding-system 'mime-charset)
+        (format " %s" (coding-system-get buffer-file-coding-system 'mime-charset))
+      " undefined"))
+  (define-ibuffer-column size-h
+    (:name "Size" :inline t)
+    (cond
+     ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+     ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+     (t (format "%8d" (buffer-size)))))
 
-(define-ibuffer-column row
-  (:name "Rows" :inline t)
-  (format "%5d" (count-lines (point-min) (point-max))))
-
-(define-ibuffer-column coding
-  (:name " coding ")
-  (if (coding-system-get buffer-file-coding-system 'mime-charset)
-      (format " %s" (coding-system-get buffer-file-coding-system 'mime-charset))
-    " undefined"))
-
-(define-ibuffer-column size-h
-  (:name "Size" :inline t)
-  (cond
-   ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
-   ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
-   (t (format "%8d" (buffer-size)))))
-
-(setq ibuffer-formats '((mark modified read-only
-                              " " (name 25 40 :left :elide)
-                              " " (size-h 9 -1 :right)
-                              " " (row 5 -1 :right)
-                              " " (mode 16 16 :left :elide)
-                              " " (coding 12 12 :right)
-                              " " filename-and-process)
-                        (mark " " (name 16 -1)
-                              " " filename)))
-
-(define-key global-map (kbd "C-x b") 'helm-buffers-list)
-(define-key global-map (kbd "C-x C-b") 'ibuffer)
+  (setq ibuffer-formats '((mark modified read-only
+                                " " (name 25 40 :left :elide)
+                                " " (size-h 9 -1 :right)
+                                " " (row 5 -1 :right)
+                                " " (mode 16 16 :left :elide)
+                                " " (coding 12 12 :right)
+                                " " filename-and-process)
+                          (mark " " (name 16 -1)
+                                " " filename)))
+  (define-key global-map (kbd "C-x C-b") 'ibuffer))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; 永続化
-(package-install 'stash)
-(defstash kill-ring "kill-ring.el" nil (or stashed 'nil))
+(use-package stash
+  :ensure t
+  :config
+  (defstash kill-ring "kill-ring.el" nil (or stashed 'nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Git
-(package-install 'magit)
-(package-install 'magit-delta)
-(global-set-key (kbd "C-x g") 'magit-status)
-(add-hook 'magit-mode-hook (lambda () (magit-delta-mode +1)))
+(use-package magit
+  :ensure t
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status))
+
+(use-package magit-delta
+  :hook (magit-mode . magit-delta-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; バックアップ
@@ -155,6 +195,47 @@
 (setq kept-new-versions 20)                     ; 新しいものは 10 世代
 (setq delete-old-versions t)                    ; 確認せずに古いものを削除
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; 文法チェック
+(use-package eglot
+  :bind (nil
+         :map eglot-mode-map
+         ("C-c a" . eglot-code-actions))
+  :hook
+  (sh-mode . eglot-ensure)
+  (markdown-mode . eglot-ensure)
+  (web-mode . eglot-ensure)
+  (mhtml-mode . eglot-ensure)
+  (rustic-mode . eglot-ensure)
+  :config
+  (setq eglot-report-progress nil))
+
+(when (version<= "28.1" emacs-version)
+  (use-package flycheck-eglot
+  :ensure t
+  :after (flycheck eglot)
+  :custom (flycheck-eglot-exclusive nil)
+  :config
+  (global-flycheck-eglot-mode 1)))
+
+(use-package flycheck
+  :ensure t
+  :custom
+  (flycheck-display-errors-delay 0.2)
+  (flycheck-textlint-plugin-alist ())
+  :init
+  (global-flycheck-mode)
+  :config
+  (setq-default flycheck-indication-mode 'left-margin)
+  (setq-default flycheck-flake8-maximum-line-length 110)
+  (add-hook 'flycheck-mode-hook #'flycheck-set-indication-mode))
+
+(use-package flycheck-inline
+  :ensure t
+  :hook (flycheck-mode-hook . flycheck-inline-mode))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; ファイルタイプ別のメジャーモード
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -166,17 +247,51 @@
 (package-install 'web-mode)
 (package-install 'markdown-mode)
 
+
+(use-package python
+  :custom
+  (python-indent-guess-indent-offset-verbose . nil)
+  :hook (python-mode-hook . eglot-ensure))
+
+(use-package reformatter
+  :ensure t
+  :hook ((python-mode . ruff-format-on-save-mode)
+         (python-mode . ruff-fix-on-save-mode))
+  :config
+  (reformatter-define ruff-format
+    :program "ruff"
+    :args `("format" "--stdin-filename" ,buffer-file-name "-")
+    :group 'python)
+  (reformatter-define ruff-fix
+    :program "ruff"
+    :args `("check" "--fix" "--exit-zero" "--stdin-filename" ,buffer-file-name  "-")
+    :group 'python))
+
+
+(defun flycheck-has-error-at-point-p ()
+  "Check if there's a Flycheck error at point."
+  (when (and (bound-and-true-p flycheck-mode)
+             (flycheck-overlay-errors-in (point) (point)))
+    t))
+
+(advice-add 'eldoc-print-current-symbol-info :around
+            (lambda (orig-fun &rest args)
+              (unless (flycheck-has-error-at-point-p)
+                (apply orig-fun args))))
+
+
+
+;; (use-package flymake-ruff
+;;   :ensure t
+;;   :hook
+;;   (eglot-managed-mode .  flymake-ruff-load))
+
+
 (add-to-list 'auto-mode-alist '("\\.ts[x]?\\'" . web-mode))
 (add-hook 'web-mode-hook 'lsp)
 (setq web-mode-markup-indent-offset 4)
 (setq web-mode-css-indent-offset 4)
 (setq web-mode-code-indent-offset 4)
-
-(package-install 'python-black)
-(add-hook 'python-mode-hook
-          #'(lambda ()
-              (add-hook 'before-save-hook
-                        'python-black-buffer nil t)))
 
 (package-install 'typescript-mode)
 (package-install 'tide)
@@ -191,14 +306,15 @@
 			(company-mode +1)
 			(global-set-key (kbd "M-*") 'tide-jump-back)))
 
-(package-install 'rustic)
-(setq rustic-lsp-client 'eglot)
-(add-hook 'rustic-mode-hook
-          (lambda ()
+(use-package rustic
+  :ensure t
+  :hook (rustic-mode-hook . (lambda ()
             (flycheck-mode +1)
             (setq rustic-format-trigger 'on-save)
             (when (executable-find "rust-analyzer")
               (setq rustic-lsp-server 'rust-analyzer))))
+  :config
+  (setq rustic-lsp-client 'eglot))
 
 (package-install 'dockerfile-mode)
 
@@ -210,27 +326,23 @@
 (global-company-mode)
 (setq company-require-match 'never)
 
-(package-install 'eglot)
-(require 'eglot)
-(add-to-list 'eglot-server-programs '(python-mode . ("pyls")))
-(add-hook 'python-mode-hook 'eglot-ensure)
-
-(define-key eglot-mode-map (kbd "M-e") #'flymake-goto-next-error)
-(define-key eglot-mode-map (kbd "M-E") #'flymake-goto-prev-error)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; エラーチェック
-(require 'flymake)
-(set-face-background 'flymake-errline "orange red")
-(set-face-foreground 'flymake-errline "black")
-
-(package-install 'flymake-diagnostic-at-point)
-(require 'flymake-diagnostic-at-point)
-(add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; その他
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; #! で始まっていればファイル保存時に実行権限を与える
 (add-hook 'after-save-hook
           'executable-make-buffer-file-executable-if-script-p)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   '(company dockerfile-mode rustic tide typescript-mode flymake-ruff reformatter markdown-mode web-mode vue-mode json-mode yaml-mode perl-mode ruby-mode flycheck-inline flycheck-eglot magit-delta magit stash helm electric-spacing recentf-ext session mwim migemo auto-save-buffers-enhanced smartparens moe-theme))
+ '(session-use-package t nil (session)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )

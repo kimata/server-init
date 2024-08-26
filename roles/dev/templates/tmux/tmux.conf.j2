@@ -87,6 +87,14 @@ bind-key          - split-window -v     -c '#{pane_current_path}'
 bind-key          C-[ copy-mode
 bind-key          C-] paste-buffer
 
+############################################################
+# プラグイン
+############################################################
+set               -g @plugin 'tmux-plugins/tmux-resurrect'
+set               -g @plugin 'tmux-plugins/tmux-continuum'
+
+run               '~/.tmux/plugins/tpm/tpm'
+
 # Local Variables:
 # mode: conf
 # End:

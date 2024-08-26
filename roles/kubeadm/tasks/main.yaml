@@ -4,6 +4,7 @@
         -   apt-transport-https
         -   ca-certificates
         -   curl
+        -   gpg
 
 -   name: Uninstall Packages
     package:
@@ -12,7 +13,14 @@
         state: absent
 
 -   name: Install Docker public signing key
-    shell: curl -sSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor --yes -o /usr/share/keyrings/docker-archive-keyring.gpg
+    shell: curl -sSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor  --batch --yes --output /usr/share/keyrings/docker-archive-keyring.gpg
+
+# -   name: Add the Docker apt repository
+#     lineinfile:
+#         path: /etc/apt/sources.list.d/docker.list
+#         line: deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu noblem stable
+#         create: yes
+#     when: (ansible_distribution == 'Ubuntu') and (ansible_distribution_version == '24.04')
 
 -   name: Add the Docker apt repository
     lineinfile:
@@ -20,24 +28,20 @@
         line: deb [signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu jammy stable
         create: yes
 
--   name: Install Google Cloud public signing key
-    get_url:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        dest: /usr/share/keyrings/kubernetes-archive-keyring.gpg
-        mode: '0644'
+-   name: Install Docker public signing key
+    shell: curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor --batch --yes --output /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
 -   name: Add the Kubernetes apt repository
     lineinfile:
         path: /etc/apt/sources.list.d/kubernetes.list
-        line: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+        line: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /
         create: yes
 
 
 -   name: Install containerd Kubernetes Packages
     apt:
         pkg:
-        -   docker.io
-        -   containerd
+        -   docker-ce
         -   kubelet
         -   kubeadm
         -   kubectl
@@ -108,37 +112,37 @@
         line: '            SystemdCgroup = true'
         insertafter: 'plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options'
 
-    -   regexp: 'endpoint = \["http://registry.green-rabbit.net"\]'
-        line: '          endpoint = ["http://registry.green-rabbit.net"]'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+    # -   regexp: 'endpoint = \["http://registry.green-rabbit.net"\]'
+    #     line: '          endpoint = ["http://registry.green-rabbit.net"]'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
 
-    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"\]'
-        line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"]'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+    # -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"\]'
+    #     line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net"]'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
 
-    -   regexp: 'endpoint = \["http://registry.green-rabbit.net:5000"\]'
-        line: '          endpoint = ["http://registry.green-rabbit.net:5000"]'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+    # -   regexp: 'endpoint = \["http://registry.green-rabbit.net:5000"\]'
+    #     line: '          endpoint = ["http://registry.green-rabbit.net:5000"]'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
 
-    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net:5000"\]'
-        line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net:5000"]'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
+    # -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net:5000"\]'
+    #     line: '        [plugins."io.containerd.grpc.v1.cri".registry.mirrors."registry.green-rabbit.net:5000"]'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.mirrors\]'
 
-    -   regexp: 'insecure_skip_verify = true'
-        line: '          insecure_skip_verify = true'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+    # -   regexp: 'insecure_skip_verify = true'
+    #     line: '          insecure_skip_verify = true'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
 
-    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls\]'
-        line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls]'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+    # -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls\]'
+    #     line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net".tls]'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
 
-    -   regexp: 'insecure_skip_verify = true'
-        line: '          insecure_skip_verify = true'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+    # -   regexp: 'insecure_skip_verify = true'
+    #     line: '          insecure_skip_verify = true'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
 
-    -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net:5000".tls\]'
-        line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net:5000".tls]'
-        insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
+    # -   regexp: '\[plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net:5000".tls\]'
+    #     line: '        [plugins."io.containerd.grpc.v1.cri".registry.configs."registry.green-rabbit.net:5000".tls]'
+    #     insertafter: '\[plugins."io.containerd.grpc.v1.cri".registry.configs\]'
 
     -   regexp: 'discard_unpacked_layers'
         line: '      discard_unpacked_layers = true'
@@ -151,19 +155,19 @@
         groups: docker
         append: yes
 
--   name: Load /etc/docker/daemon.json
-    shell:
-        cmd: cat /etc/docker/daemon.json || echo '{}'
-    register: daemon_json_txt
+# -   name: Load /etc/docker/daemon.json
+#     shell:
+#         cmd: cat /etc/docker/daemon.json || echo '{}'
+#     register: daemon_json_txt
 
--   name: Parse daemon.json
-    set_fact:
-        daemon_json: '{{ daemon_json_txt.stdout | from_json }}'
+# -   name: Parse daemon.json
+#     set_fact:
+#         daemon_json: '{{ daemon_json_txt.stdout | from_json }}'
 
--   name: Setting docker
-    copy:
-        dest: /etc/docker/daemon.json
-        content: '{{ daemon_json | combine( { "insecure-registries": ["registry.green-rabbit.net", "registry.green-rabbit.net:5000"] } ) | to_json }}'
+# -   name: Setting docker
+#     copy:
+#         dest: /etc/docker/daemon.json
+#         content: '{{ daemon_json | combine( { "insecure-registries": ["registry.green-rabbit.net", "registry.green-rabbit.net:5000"] } ) | to_json }}'
 
 -   name: Edit eviction threshold
     blockinfile:
@@ -172,8 +176,9 @@
             evictionHard:
               imagefs.available: "2%"
               nodefs.available: "1%"
-    # NOTE: このファイルが存在しない場合，まだ kubeadm init や join 前で，それらを実行すると
-    # 上書きされてしまうものの，ここでコケると不便なので，とりあえず作成する．
+    # NOTE: このファイルが存在しない場合，まだ kubeadm init や join 前のはずで，
+    # それらを実行すると上書きされてしまうものの，ここでコケると不便なので
+    # とりあえず作成する．
         create: yes
     notify: restart kubelet
     when: "'raspi' in ansible_kernel"

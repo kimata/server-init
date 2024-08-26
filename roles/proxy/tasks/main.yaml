@@ -1,122 +1,121 @@
--   name: Install Packages
-    apt:
-        pkg:
-        -   docker-compose
-        -   haproxy
-        -   td-agent
+# -   name: Install Packages
+#     apt:
+#         pkg:
+#         -   haproxy
+#         -   td-agent
 
--   name: Setting HAProxy
-    blockinfile:
-        path: /etc/haproxy/haproxy.cfg
-        block: |
-            frontend k8s-controller
-                mode tcp
-                bind *:6443
-                option tcplog
-                default_backend k8s-controller
-            backend k8s-controller
-                mode tcp
-                balance roundrobin
-                server kube-ctrl-1 192.168.0.31:6443 check
-                # server kube-ctrl-2 192.168.0.32:6443 check
-                # server kube-ctrl-3 192.168.0.23:6443 check
+# -   name: Setting HAProxy
+#     blockinfile:
+#         path: /etc/haproxy/haproxy.cfg
+#         block: |
+#             frontend k8s-controller
+#                 mode tcp
+#                 bind *:6443
+#                 option tcplog
+#                 default_backend k8s-controller
+#             backend k8s-controller
+#                 mode tcp
+#                 balance roundrobin
+#                 server kube-ctrl-1 192.168.0.31:6443 check
+#                 # server kube-ctrl-2 192.168.0.32:6443 check
+#                 # server kube-ctrl-3 192.168.0.23:6443 check
 
-            # NOTE: Fluentd は HAProxy ではなく Fluentd の Forwarding を使う
-            # frontend fluentd
-            #     mode tcp
-            #     bind *:24224
-            #     option tcplog
-            #     default_backend fluentd
-            # backend fluentd
-            #     mode tcp
-            #     server fluentd-1 192.168.4.1:24224 check
+#             # NOTE: Fluentd は HAProxy ではなく Fluentd の Forwarding を使う
+#             # frontend fluentd
+#             #     mode tcp
+#             #     bind *:24224
+#             #     option tcplog
+#             #     default_backend fluentd
+#             # backend fluentd
+#             #     mode tcp
+#             #     server fluentd-1 192.168.4.1:24224 check
 
-            # frontend fluentd-www
-            #     mode http
-            #     bind *:8888
-            #     default_backend fluentd-www
-            # backend fluentd-www
-            #     option httpchk GET /
-            #     http-check expect status 200
-            #     mode http
-            #     server fluentd-www 192.168.4.1:8888 check
+#             # frontend fluentd-www
+#             #     mode http
+#             #     bind *:8888
+#             #     default_backend fluentd-www
+#             # backend fluentd-www
+#             #     option httpchk GET /
+#             #     http-check expect status 200
+#             #     mode http
+#             #     server fluentd-www 192.168.4.1:8888 check
 
-            frontend grafana
-                mode http
-                bind *:3000
-                default_backend grafana
-            backend grafana
-                option httpchk GET /login
-                http-check expect status 200
-                mode http
-                server grafana grafana.kubernetes.green-rabbit.net:3000 check
+#             frontend grafana
+#                 mode http
+#                 bind *:3000
+#                 default_backend grafana
+#             backend grafana
+#                 option httpchk GET /login
+#                 http-check expect status 200
+#                 mode http
+#                 server grafana grafana.kubernetes.green-rabbit.net:3000 check
 
-            frontend influxdb
-                mode http
-                bind *:8086
-                default_backend influxdb
-            backend influxdb
-                option httpchk GET /signin
-                http-check expect status 200
-                mode http
-                server influxdb influxdb.kubernetes.green-rabbit.net:8086 check
+#             frontend influxdb
+#                 mode http
+#                 bind *:8086
+#                 default_backend influxdb
+#             backend influxdb
+#                 option httpchk GET /signin
+#                 http-check expect status 200
+#                 mode http
+#                 server influxdb influxdb.kubernetes.green-rabbit.net:8086 check
 
-            frontend prometheus
-                mode http
-                bind *:9090
-                default_backend prometheus
-            backend prometheus
-                option httpchk GET /graph
-                http-check expect status 200
-                mode http
-                server prometheus prometheus.kubernetes.green-rabbit.net:9090 check
+#             frontend prometheus
+#                 mode http
+#                 bind *:9090
+#                 default_backend prometheus
+#             backend prometheus
+#                 option httpchk GET /graph
+#                 http-check expect status 200
+#                 mode http
+#                 server prometheus prometheus.kubernetes.green-rabbit.net:9090 check
 
-            frontend loki
-                mode http
-                bind *:3100
-                default_backend loki
-            backend loki
-                option httpchk GET /loki/api/v1/status/buildinfo
-                http-check expect status 200
-                mode http
-                server loki loki.kubernetes.green-rabbit.net:3100 check
+#             frontend loki
+#                 mode http
+#                 bind *:3100
+#                 default_backend loki
+#             backend loki
+#                 option httpchk GET /loki/api/v1/status/buildinfo
+#                 http-check expect status 200
+#                 mode http
+#                 server loki loki.kubernetes.green-rabbit.net:3100 check
 
-            frontend m5paper-aqua
-                mode http
-                bind *:5555
-                default_backend m5paper-aqua
-            backend m5paper-aqua
-                option httpchk GET /aqua-monitor/
-                http-check expect status 200
-                timeout check 30s
-                mode http
-                server m5paper-aqua m5paper-aqua.kubernetes.green-rabbit.net:5555 check
+#             frontend m5paper-aqua
+#                 mode http
+#                 bind *:5555
+#                 default_backend m5paper-aqua
+#             backend m5paper-aqua
+#                 option httpchk GET /aqua-monitor/
+#                 http-check expect status 200
+#                 timeout check 30s
+#                 mode http
+#                 server m5paper-aqua m5paper-aqua.kubernetes.green-rabbit.net:5555 check
 
-            listen stats
-                bind :9999
-                mode http
-                stats enable
-                stats uri /
-    notify: restart haproxy
+#             listen stats
+#                 bind :9999
+#                 mode http
+#                 stats enable
+#                 stats uri /
+#     notify: restart haproxy
 
--   name: Create directory
-    file:
-        path: '{{item}}'
-        state: directory
-        mode: '0755'
-    with_items:
-    -   /home/{{ansible_env.SUDO_USER}}/service/coredns
-    -   /home/{{ansible_env.SUDO_USER}}/service/coredns/conf
+# -   name: Create directory
+#     file:
+#         path: '{{item}}'
+#         state: directory
+#         mode: '0755'
+#     with_items:
+#     -   /home/{{ansible_env.SUDO_USER}}/service/coredns
+#     -   /home/{{ansible_env.SUDO_USER}}/service/coredns/conf
 
--   name: Setting CoreDNS config
-    template:
-        src: '{{item.src}}'
-        dest: '/home/{{ansible_env.SUDO_USER}}/service/{{item.dest}}'
-    with_items:
-    -   {src: coredns/Dockerfile.j2, dest: coredns/Dockerfile}
-    -   {src: coredns/docker-compose.yml.j2, dest: docker-compose.yml}
-    -   {src: coredns/Corefile.j2, dest: coredns/conf/Corefile}
-
+# -   name: Setting CoreDNS config
+#     template:
+#         src: '{{item.src}}'
+#         dest: '/home/{{ansible_env.SUDO_USER}}/service/{{item.dest}}'
+#     with_items:
+#     -   {src: coredns/Dockerfile.j2, dest: coredns/Dockerfile}
+#     -   {src: coredns/compose.yaml.j2, dest: compose.yaml}
+#     -   {src: coredns/Corefile.j2, dest: coredns/conf/Corefile}
+#
 -   name: Disable systemd-resolved
     systemd:
         name: systemd-resolved
@@ -132,25 +131,26 @@
             nameserver {{ network.dns }}
             search {{ network.domain }}
 
--   name: Restart CoreDNS
-    docker_compose:
-        project_src: /home/{{ansible_env.SUDO_USER}}/service
-        restarted: yes
-    register: output
 
--   name: Display result
-    debug:
-        var: output
+# -   name: Restart CoreDNS
+#     docker_compose:
+#         project_src: /home/{{ansible_env.SUDO_USER}}/service
+#         restarted: yes
+#     register: output
 
--   name: Setting Fluentd config
-    template:
-        src: fluentd/td-agent.conf.j2
-        dest: /etc/td-agent/td-agent.conf
+# -   name: Display result
+#     debug:
+#         var: output
 
--   name: Restart Fluentd
-    systemd:
-        name: td-agent
-        state: restarted
+# # -   name: Setting Fluentd config
+# #     template:
+# #         src: fluentd/td-agent.conf.j2
+# #         dest: /etc/td-agent/td-agent.conf
+
+# # -   name: Restart Fluentd
+# #     systemd:
+# #         name: td-agent
+# #         state: restarted
 
 
 # Local Variables:

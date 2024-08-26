@@ -10,14 +10,17 @@
         -   keychain
         -   "{{ 'silversearcher-ag' if ansible_distribution == 'Ubuntu' else 'the_silver_searcher' }}"
         -   autojump
+        -   clang
         -   git
         -   tig
+        -   ripgrep
         -   flake8
         -   cmigemo
         -   colordiff
-        -   black
         -   mosh
-        -   python3-pip
+        -   pipx
+        -   python3-poetry
+        -   black
         update_cache: yes
 
 -   name: Install Packages (Ubuntu 22.04 or later)
@@ -44,6 +47,25 @@
         -   eza
     when: (ansible_distribution == 'Ubuntu') and ((ansible_distribution_version | float) >= 24.04)
 
+
+-   name: Install Packages (pipx)
+    become: no
+    community.general.pipx:
+        name: "{{ item }}"
+    with_items:
+    -   ruff
+    -   pyright
+
+
+-   name: Check Rye
+    stat:
+        path: ~/.rye/env
+    register: rye
+
+-   name: Install Rye
+    shell: curl -sSf https://rye.astral.sh/get | RYE_INSTALL_OPTION="--yes" bash
+    when: not rye.stat.exists
+
 -   name: Setting dircolors
     become: no
     template:
@@ -55,6 +77,12 @@
     template:
         src: tmux/tmux.conf.j2
         dest: ~/.tmux.conf
+
+-   name: Install tmux plugin manager
+    become: no
+    git:
+        repo: https://github.com/tmux-plugins/tpm
+        dest: ~/.tmux/plugins/tpm
 
 -   name: Setting SSH
     become: no
@@ -118,6 +146,19 @@
     template:
         src: emacs/init.el.j2
         dest: ~/.emacs.d/init.el
+
+-   name: Settign Ruff (create directory)
+    become: no
+    file:
+        path: ~/.config/ruff/
+        recurse: true
+        state: directory
+
+-   name: Setting Ruff
+    become: no
+    template:
+        src: ruff/ruff.toml.j2
+        dest: ~/.config/ruff/ruff.toml
 
 -   name: Settign Emacs for root (create directory)
     become: yes
